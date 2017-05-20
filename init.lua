@@ -3,13 +3,13 @@ local xmin = 1110
 local xmax = 2837
 local zmin = -4919
 local zmax = -3504
-local check = false        -- if set to false can use weapons everywhere
+local check = true        -- if set to false can use weapons everywhere
 
 
 
 
 
--- This functions checks if weapon se is allowed at present position
+-- This functions checks if weapon is allowed at present position
 -- returns true if so
 
 local function wcheck_area(user)
@@ -55,7 +55,7 @@ end
 -- radius = in which radius from bullet is checked for a hit. in nodes, usually 1
 -- entity_name = name of the bullet-entity
 -- sound_name = sound played when hit
--- dragon_kill = server soecific for jungle server, you probably do not need this. leave empty
+-- dragon_kill = server specific for jungle server. true can penetrate water_source
 
 local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name, sound_name, dragon_kill)
 	self.timer = self.timer + dtime
@@ -65,7 +65,7 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 	if self.timer > 0.05 then
 		local objs = minetest.get_objects_inside_radius({x = pos.x, y = pos.y, z = pos.z}, radius)
 		local node =  minetest.get_node(pos)
-		if node.name ~= "air" then
+		if node.name ~= "air" and (node.name ~= "default:water_source" or not dragon_kill) then
 			  self.object:remove()
 			  self.timer = 0
 		else
@@ -76,7 +76,7 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 					if obj:get_luaentity().name == "dmobs:dragon" and not dragon_kill then
 					      self.object:remove()
 					else
-					
+					      
 					      obj:punch(self.object, 1.0, {
 					      full_punch_interval = 1.0,
 					      damage_groups= {fleshy = damage},
@@ -86,6 +86,14 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 					end
 					
 				      end
+			      end
+			      if obj:is_player() then
+					      obj:punch(self.object, 1.0, {
+					      full_punch_interval = 1.0,
+					      damage_groups= {fleshy = damage},
+					      }, nil)
+					      minetest.sound_play(sound_name, {pos = self.lastpos, gain = 0.8})
+					      self.object:remove()		
 			      end
 		      end
 		      self.timer = 0
@@ -160,11 +168,11 @@ minetest.register_craftitem("rangedweapons:javelint", {
 })
 
 minetest.register_craftitem("rangedweapons:javelin", {
-	description = "javelin(ranged dammage 6)",
+	description = "javelin(ranged damage 6)",
 	wield_scale = {x=2,y=2,z=1.0},
 	range = 5,
 	inventory_image = "ranged_javelin_inv.png",
-	stack_max= 10,
+	stack_max= 200,
 	on_use = function(itemstack, user, pointed_thing)
 	    weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:javelin_entity", 30)
 	    return itemstack
@@ -451,7 +459,7 @@ minetest.register_craft({
 })
 
 minetest.register_tool("rangedweapons:spas12", {
-	description = "spas-12(ranged damage 15,bigger radius)",
+	description = "spas-12(ranged damage 15,bigger radius) penetrates water",
 	wield_scale = {x=1.5,y=1.5,z=1.5},
 	inventory_image = "rangedweapons_spas12.png",
 	on_use = function(itemstack, user, pointed_thing)
@@ -494,7 +502,7 @@ minetest.register_craftitem("rangedweapons:shell", {
 
 
 minetest.register_tool("rangedweapons:awp", {
-	description = "awp(ranged damage 20)",
+	description = "awp(ranged damage 20) penetrates water",
 	wield_scale = {x=1.75,y=1.75,z=1.0},
 	inventory_image = "rangedweapons_awp.png",
 	on_use = function(itemstack, user, pointed_thing)
@@ -549,16 +557,17 @@ minetest.override_item("default:snow", {
 	range = 0,
 	stack_max= 1024,
 	on_use = function(itemstack, user, pointed_thing)
-		weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:snowball", 30, false, false, true)
+		weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:snowball", 30, false,false, true)
+		return itemstack
 	end
 })
 
 local RANGEDWEAPONS_SNOWBALL = {
 	physical = false,
 	timer = 0,
-	visual = "cube",
-	visual_size = {x=0.5, y=0.5,},
-	textures = {"default_snow.png","default_snow.png","default_snow.png","default_snow.png","default_snow.png","default_snow.png"},
+	visual = "sprite",
+	visual_size = {x=0.15, y=0.15,},
+	textures = {"default_snow.png"},
 	lastpos= {},
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
