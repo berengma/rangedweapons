@@ -31,21 +31,6 @@ local function wcheck_area(user)
        
 end
 
--- This function checks if there is already a bullet "name" at "pos"
--- returns true if so
-
-local function check_bullet(pos,name)
-      local objs = minetest.get_objects_inside_radius({x = pos.x, y = pos.y, z = pos.z}, 1)
-		for k, obj in pairs(objs) do
-			if obj:get_luaentity() ~= nil then
-				if obj:get_luaentity().name == name then
-					return true
-				end
-			end
-		end
-		return false
-end
-
 
 -- This functions calculates the way of the bullet.
 --
@@ -66,6 +51,7 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 		local objs = minetest.get_objects_inside_radius({x = pos.x, y = pos.y, z = pos.z}, radius)
 		local node =  minetest.get_node(pos)
 		if node.name ~= "air" and (node.name ~= "default:water_source" or not dragon_kill) then
+		          if node.name == "default:apple" then minetest.remove_node(pos) end -- LOL
 			  self.object:remove()
 			  self.timer = 0
 		else
@@ -133,10 +119,7 @@ local function weapon_shoot(itemstack, user, pointed_thing, cooldown, entity_nam
 		local dir = user:get_look_dir()
 		local yaw = user:get_look_yaw()
 		if pos and dir then
-			pos.y = pos.y + 1.5
-			if check_bullet(pos, entity_name, cooldown) then
-			      return itemstack
-			end
+			pos.y = pos.y + 1.7
 			local obj = minetest.add_entity(pos, entity_name)
 			if not minetest.setting_getbool("creative_mode") then 
 				if not ammo then 
@@ -491,7 +474,7 @@ local rangedweapons_spas12shot = {
 	timer = 0,
 	visual = "sprite",
 	visual_size = {x=0.25, y=0.25,},
-	textures = {'shot.png'},
+	textures = {'shotshot.png'},
 	lastpos= {},
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
