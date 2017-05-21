@@ -3,8 +3,8 @@ local xmin = 1110
 local xmax = 2837
 local zmin = -4919
 local zmax = -3504
-local check = true        -- if set to false can use weapons everywhere
-
+local check = true        -- if set to false you can use weapons everywhere
+local trigger = {}
 
 
 
@@ -108,14 +108,18 @@ end
 
 -- this function is called when you trigger the button(shoot the weapon)
 -- itemstack, user, pointed thing you get from on_use function. pass through
+-- cooldown = how many seconds to wait until next use is possible
 -- entity_name = name of the bullet-entity
 -- velocity = velocity of the bullet
 -- grav = gravity, bullets will not go straight
 -- ammo = specify ammonition here. if empty the thing you hold will be used
 -- nocheck = if set to true weapon will not be checked for area, even if area-check is turned on
 
-local function weapon_shoot(itemstack, user, pointed_thing, entity_name, velocity, grav, ammo, nocheck)	
-	if wcheck_area(user) or nocheck then
+local function weapon_shoot(itemstack, user, pointed_thing, cooldown, entity_name, velocity, grav, ammo, nocheck)	
+    local name = user:get_player_name()
+    
+	if (wcheck_area(user) or nocheck) and not trigger[name] then
+		
 	     
 			
 		if pointed_thing.type ~= "nothing" then
@@ -124,6 +128,7 @@ local function weapon_shoot(itemstack, user, pointed_thing, entity_name, velocit
 				return itemstack
 			end
 		end
+		
 		local pos = user:getpos()
 		local dir = user:get_look_dir()
 		local yaw = user:get_look_yaw()
@@ -155,7 +160,10 @@ local function weapon_shoot(itemstack, user, pointed_thing, entity_name, velocit
 				end
 			end
 		end
-		
+		trigger[name] = true
+		minetest.after(cooldown,function()
+		    trigger[name] = nil
+		end)
 		return itemstack
         end
 end
@@ -168,15 +176,15 @@ minetest.register_craftitem("rangedweapons:javelint", {
 })
 
 minetest.register_craftitem("rangedweapons:javelin", {
-	description = "javelin(ranged damage 6)",
+	description = "javelin(ranged damage 6) reload in 1 sec",
 	wield_scale = {x=2,y=2,z=1.0},
 	range = 5,
 	inventory_image = "ranged_javelin_inv.png",
 	stack_max= 200,
 	on_use = function(itemstack, user, pointed_thing)
-	    weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:javelin_entity", 30)
+	    weapon_shoot(itemstack, user, pointed_thing, 1, "rangedweapons:javelin_entity", 30)
 	    return itemstack
-	end,
+	end
 })
 
 minetest.register_craft({
@@ -206,12 +214,12 @@ minetest.register_entity("rangedweapons:javelin_entity", rangedweapons_javelin_E
 
 
 minetest.register_craftitem("rangedweapons:wooden_shuriken", {
-	description = "wooden shuriken(ranged damage 4)",
+	description = "wooden shuriken(ranged damage 4) reload in 1 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_wooden_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:woodsr", 35)
+	      weapon_shoot(itemstack, user, pointed_thing, 1, "rangedweapons:woodsr", 35)
 	      return itemstack
 	end
 })
@@ -244,12 +252,12 @@ minetest.register_craft({
 
 
 minetest.register_craftitem("rangedweapons:stone_shuriken", {
-	description = "stone shuriken(ranged damage 4)",
+	description = "stone shuriken(ranged damage 4) reload in 1 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_stone_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-		weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:stonesr", 20)
+		weapon_shoot(itemstack, user, pointed_thing, 1, "rangedweapons:stonesr", 20)
 		return itemstack
 	end
 })
@@ -281,12 +289,12 @@ minetest.register_craft({
 
 
 minetest.register_craftitem("rangedweapons:steel_shuriken", {
-	description = "steel shuriken(ranged damage 6)",
+	description = "steel shuriken(ranged damage 6) reload in 1 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_steel_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:steelsr", 45)
+	      weapon_shoot(itemstack, user, pointed_thing, 1, "rangedweapons:steelsr", 45)
 	      return itemstack
 	end
 })
@@ -317,12 +325,12 @@ minetest.register_craft({
 
 
 minetest.register_craftitem("rangedweapons:bronze_shuriken", {
-	description = "bronze shuriken(ranged damage 8)",
+	description = "bronze shuriken(ranged damage 8) reload in 0.5 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_bronze_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:bronzesr", 50)
+	      weapon_shoot(itemstack, user, pointed_thing, 0.5,"rangedweapons:bronzesr", 50)
 	      return itemstack
 	end
 })
@@ -352,12 +360,12 @@ minetest.register_craft({
 })
 
 minetest.register_craftitem("rangedweapons:gold_shuriken", {
-	description = "golden shuriken(ranged damage 10)",
+	description = "golden shuriken(ranged damage 10) reload in 0.5 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_golden_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:goldsr", 35)
+	      weapon_shoot(itemstack, user, pointed_thing, 0.5,"rangedweapons:goldsr", 35)
 	      return itemstack
 	end
 })
@@ -387,12 +395,12 @@ minetest.register_craft({
 })
 
 minetest.register_craftitem("rangedweapons:mese_shuriken", {
-	description = "mese shuriken(ranged damage 10)",
+	description = "mese shuriken(ranged damage 10) reload in 0.5 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_mese_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-		weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:mesesr", 50)
+		weapon_shoot(itemstack, user, pointed_thing, 0.5,"rangedweapons:mesesr", 50)
 		return itemstack
 	end
 })
@@ -424,12 +432,12 @@ minetest.register_craft({
 
 
 minetest.register_craftitem("rangedweapons:diamond_shuriken", {
-	description = "diamond shuriken(ranged damage 12)",
+	description = "diamond shuriken(ranged damage 12) reload in 0.5 sec",
 	range = 0,
 	stack_max= 200,
 	inventory_image = "rangedweapons_diamond_shuriken.png",
 	on_use = function(itemstack, user, pointed_thing)
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:diamondsr", 50)
+	      weapon_shoot(itemstack, user, pointed_thing, 0.5, "rangedweapons:diamondsr", 50)
 	      return itemstack
 	end
 })
@@ -459,7 +467,7 @@ minetest.register_craft({
 })
 
 minetest.register_tool("rangedweapons:spas12", {
-	description = "spas-12(ranged damage 15,bigger radius) penetrates water",
+	description = "spas-12(ranged damage 35,bigger radius) penetrates water, reload in 2 sec",
 	wield_scale = {x=1.5,y=1.5,z=1.5},
 	inventory_image = "rangedweapons_spas12.png",
 	on_use = function(itemstack, user, pointed_thing)
@@ -468,7 +476,7 @@ minetest.register_tool("rangedweapons:spas12", {
 			minetest.sound_play("empty", {object=user})
 			return itemstack
 		end
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:spas12shot", 30, true, "rangedweapons:shell 1")
+	      weapon_shoot(itemstack, user, pointed_thing, 2, "rangedweapons:spas12shot", 30, true, "rangedweapons:shell 1")
 	end
 })
 minetest.register_craft({
@@ -488,7 +496,7 @@ local rangedweapons_spas12shot = {
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
 rangedweapons_spas12shot.on_step = function(self, dtime)
-	weapon_onstep(self,dtime,0.5,15,2,"rangedweapons:spas12shot","default_dig_cracky", true)
+	weapon_onstep(self,dtime,0.5,35,2,"rangedweapons:spas12shot","default_dig_cracky", true)
 end
 
 minetest.register_entity("rangedweapons:spas12shot", rangedweapons_spas12shot )
@@ -502,7 +510,7 @@ minetest.register_craftitem("rangedweapons:shell", {
 
 
 minetest.register_tool("rangedweapons:awp", {
-	description = "awp(ranged damage 20) penetrates water",
+	description = "awp(ranged damage 80) penetrates water, reload in 5 sec",
 	wield_scale = {x=1.75,y=1.75,z=1.0},
 	inventory_image = "rangedweapons_awp.png",
 	on_use = function(itemstack, user, pointed_thing)
@@ -511,7 +519,7 @@ minetest.register_tool("rangedweapons:awp", {
 			minetest.sound_play("rangedweapons_empty", {object=user})
 			return itemstack
 		end
-	      weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:awpshot", 40, true, "rangedweapons:10mm 1")
+	      weapon_shoot(itemstack, user, pointed_thing, 5, "rangedweapons:awpshot", 40, true, "rangedweapons:10mm 1")
 	end
 })
 minetest.register_craft({
@@ -534,7 +542,7 @@ local rangedweapons_awpshot = {
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
 rangedweapons_awpshot.on_step = function(self, dtime)
-	weapon_onstep(self,dtime,0.5,20,1,"rangedweapons:awpshot","rifle_shoot", true)
+	weapon_onstep(self,dtime,0.5,80,2,"rangedweapons:awpshot","rifle_shoot", true)
 end
 
 minetest.register_entity("rangedweapons:awpshot", rangedweapons_awpshot )
@@ -553,11 +561,11 @@ minetest.register_craftitem("rangedweapons:10mm", {
 
 
 minetest.override_item("default:snow", {
-	description = "Snowball(ranged damage 4)",
+	description = "Snowball(ranged damage 2) reload in 0.2 sec",
 	range = 0,
 	stack_max= 1024,
 	on_use = function(itemstack, user, pointed_thing)
-		weapon_shoot(itemstack, user, pointed_thing, "rangedweapons:snowball", 30, false,false, true)
+		weapon_shoot(itemstack, user, pointed_thing, 0.2, "rangedweapons:snowball", 30, false,false, true)
 		return itemstack
 	end
 })
@@ -572,7 +580,7 @@ local RANGEDWEAPONS_SNOWBALL = {
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
 RANGEDWEAPONS_SNOWBALL.on_step = function(self, dtime)
-	weapon_onstep(self,dtime,0.5,4,1,"rangedweapons:snowball","default_dig_cracky")
+	weapon_onstep(self,dtime,0.5,2,1,"rangedweapons:snowball","default_dig_cracky")
 end
 
 minetest.register_entity("rangedweapons:snowball", RANGEDWEAPONS_SNOWBALL)
