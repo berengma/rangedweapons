@@ -48,10 +48,10 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 	local node = minetest.get_node(pos)
 
 	if self.timer > 0.05 then
-		local objs = minetest.get_objects_inside_radius({x = pos.x, y = pos.y, z = pos.z}, radius)
+		local objs = minetest.get_objects_inside_radius(pos, radius)
 		local node =  minetest.get_node(pos)
-		if node.name ~= "air" and (node.name ~= "default:water_source" or not dragon_kill) then
-		          if node.name == "default:apple" then minetest.remove_node(pos) end -- LOL
+		if node.name ~= "air" and (node.name ~= "default:water_source" or not dragon_kill) then    --only weapon with dragon_kill flag can penetrate water
+		          if node.name == "default:apple" then minetest.remove_node(pos) end -- LOL 
 			  self.object:remove()
 			  self.timer = 0
 		else
@@ -70,7 +70,7 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 					      minetest.sound_play(sound_name, {pos = self.lastpos, gain = 0.8})
 					      self.object:remove()
 					end
-					
+				     
 				      end
 			      end
 			      if obj:is_player() then
@@ -88,7 +88,7 @@ local function weapon_onstep(self, dtime, checktime, damage, radius, entity_name
 
 	
 	
-	self.lastpos= {x = pos.x, y = pos.y, z = pos.z}
+	self.lastpos= pos
 end
 
 
@@ -98,7 +98,7 @@ end
 -- entity_name = name of the bullet-entity
 -- velocity = velocity of the bullet
 -- grav = gravity, bullets will not go straight
--- ammo = specify ammonition here. if empty the thing you hold will be used
+-- ammo = specify ammonition here. if nil the thing you hold will be used
 -- nocheck = if set to true weapon will not be checked for area, even if area-check is turned on
 
 local function weapon_shoot(itemstack, user, pointed_thing, cooldown, entity_name, velocity, grav, ammo, nocheck)	
@@ -455,9 +455,17 @@ minetest.register_tool("rangedweapons:spas12", {
 	inventory_image = "rangedweapons_spas12.png",
 	on_use = function(itemstack, user, pointed_thing)
 		local inv = user:get_inventory()
-		if not inv:contains_item("main", "rangedweapons:shell 1") then
-			minetest.sound_play("empty", {object=user})
-			return itemstack
+		if not trigger[user:get_player_name()] then
+		    if not inv:contains_item("main", "rangedweapons:shell 1") then
+			    minetest.sound_play("rangedweapons_empty", {object=user})
+			    return itemstack
+		    else
+		      minetest.sound_play("rangedweapons_shotgun_shoot", {
+		      pos = user:getpos(),
+		      max_hear_distance = 100,
+		      gain = 10.0,
+		      })
+		    end
 		end
 	      weapon_shoot(itemstack, user, pointed_thing, 2, "rangedweapons:spas12shot", 30, true, "rangedweapons:shell 1")
 	end
@@ -498,9 +506,17 @@ minetest.register_tool("rangedweapons:awp", {
 	inventory_image = "rangedweapons_awp.png",
 	on_use = function(itemstack, user, pointed_thing)
 		local inv = user:get_inventory()
-		if not inv:contains_item("main", "rangedweapons:10mm 1") then
-			minetest.sound_play("rangedweapons_empty", {object=user})
-			return itemstack
+		if not trigger[user:get_player_name()] then
+		    if not inv:contains_item("main", "rangedweapons:10mm 1") then
+			    minetest.sound_play("rangedweapons_empty", {object=user})
+			    return itemstack
+		    else
+		      minetest.sound_play("rangedweapons_rifle_shoot", {
+		      pos = user:getpos(),
+		      max_hear_distance = 100,
+		      gain = 10.0,
+		      })
+		    end
 		end
 	      weapon_shoot(itemstack, user, pointed_thing, 5, "rangedweapons:awpshot", 40, true, "rangedweapons:10mm 1")
 	end
@@ -525,7 +541,7 @@ local rangedweapons_awpshot = {
 	collisionbox = {0, 0, 0, 0, 0, 0},
 }
 rangedweapons_awpshot.on_step = function(self, dtime)
-	weapon_onstep(self,dtime,0.5,80,2,"rangedweapons:awpshot","rifle_shoot", true)
+	weapon_onstep(self,dtime,0.5,80,2,"rangedweapons:awpshot","default_dig_cracky", true)
 end
 
 minetest.register_entity("rangedweapons:awpshot", rangedweapons_awpshot )
